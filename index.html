@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+		header {
+		background-color: #756bb1;
+		padding: 1px;
+		text-align: center;
+		font-family: Montserrat;
+		font-size: 25px;
+		color: white;
+		}
+        </style>
+        <title>Sumur Resapan Tangerang</title>
+    </head>
+    <body>
+	<header>
+		<h1> SEBARAN RUMUR RESAPAN KOTA TANGERANG </h1>
+	</header>
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/Geologi_1.js"></script>
+        <script src="data/PipaPDAM_2.js"></script>
+        <script src="data/Survei_Sumur_Resapan_3.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        document.querySelector(".leaflet-popup-pane").addEventListener("load", function(event) {
+          var tagName = event.target.tagName,
+            popup = map._popup;
+          // Also check if flag is already set.
+          if (tagName === "IMG" && popup && !popup._updated) {
+            popup._updated = true; // Set flag to prevent looping.
+            popup.update();
+          }
+        }, true);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0;
+        map.addLayer(layer_OSMStandard_0);
+        function pop_Geologi_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['objectid'] !== null ? autolinker.link(feature.properties['objectid'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['db_225o9_hsu_rt0e1_geologi_kota'] !== null ? autolinker.link(feature.properties['db_225o9_hsu_rt0e1_geologi_kota'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['symbols'] !== null ? autolinker.link(feature.properties['symbols'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">umur</th>\
+                        <td>' + (feature.properties['umur'] !== null ? autolinker.link(feature.properties['umur'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['kategori'] !== null ? autolinker.link(feature.properties['kategori'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['formasi'] !== null ? autolinker.link(feature.properties['formasi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['pembawa'] !== null ? autolinker.link(feature.properties['pembawa'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">mineral</th>\
+                        <td>' + (feature.properties['mineral'] !== null ? autolinker.link(feature.properties['mineral'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['keterangan'] !== null ? autolinker.link(feature.properties['keterangan'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['pulau'] !== null ? autolinker.link(feature.properties['pulau'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">struk_geo</th>\
+                        <td>' + (feature.properties['struk_geo'] !== null ? autolinker.link(feature.properties['struk_geo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['st_area(shape)'] !== null ? autolinker.link(feature.properties['st_area(shape)'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['st_length(shape)'] !== null ? autolinker.link(feature.properties['st_length(shape)'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Geologi_1_0(feature) {
+            switch(String(feature.properties['struk_geo'])) {
+                case 'Aluvium':
+                    return {
+                pane: 'pane_Geologi_1',
+                opacity: 1,
+                color: 'rgba(110,110,110,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(222,147,62,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Formasi Serpong':
+                    return {
+                pane: 'pane_Geologi_1',
+                opacity: 1,
+                color: 'rgba(110,110,110,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,209,182,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Kipas Aluvium':
+                    return {
+                pane: 'pane_Geologi_1',
+                opacity: 1,
+                color: 'rgba(110,110,110,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(179,123,93,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Tuff Banten':
+                    return {
+                pane: 'pane_Geologi_1',
+                opacity: 1,
+                color: 'rgba(110,110,110,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(137,68,68,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Geologi_1');
+        map.getPane('pane_Geologi_1').style.zIndex = 401;
+        map.getPane('pane_Geologi_1').style['mix-blend-mode'] = 'normal';
+        var layer_Geologi_1 = new L.geoJson(json_Geologi_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Geologi_1',
+            layerName: 'layer_Geologi_1',
+            pane: 'pane_Geologi_1',
+            onEachFeature: pop_Geologi_1,
+            style: style_Geologi_1_0,
+        });
+        bounds_group.addLayer(layer_Geologi_1);
+        map.addLayer(layer_Geologi_1);
+        function pop_PipaPDAM_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['objectid'] !== null ? autolinker.link(feature.properties['objectid'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Lokasi</th>\
+                        <td>' + (feature.properties['lokasi'] !== null ? autolinker.link(feature.properties['lokasi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Posisi</th>\
+                        <td>' + (feature.properties['posisi'] !== null ? autolinker.link(feature.properties['posisi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Tipe</th>\
+                        <td>' + (feature.properties['type'] !== null ? autolinker.link(feature.properties['type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['bahan'] !== null ? autolinker.link(feature.properties['bahan'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Wilayah Pelayanan</th>\
+                        <td>' + (feature.properties['wilayah'] !== null ? autolinker.link(feature.properties['wilayah'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Status</th>\
+                        <td>' + (feature.properties['status'] !== null ? autolinker.link(feature.properties['status'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Kondisi</th>\
+                        <td>' + (feature.properties['kondisi'] !== null ? autolinker.link(feature.properties['kondisi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['dia'] !== null ? autolinker.link(feature.properties['dia'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Panjang (m)</th>\
+                        <td>' + (feature.properties['panjang_m'] !== null ? autolinker.link(feature.properties['panjang_m'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['tahun_psg'] !== null ? autolinker.link(feature.properties['tahun_psg'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['kec'] !== null ? autolinker.link(feature.properties['kec'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['kel'] !== null ? autolinker.link(feature.properties['kel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['rw'] !== null ? autolinker.link(feature.properties['rw'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['rt'] !== null ? autolinker.link(feature.properties['rt'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['st_length(shape)'] !== null ? autolinker.link(feature.properties['st_length(shape)'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_PipaPDAM_2_0() {
+            return {
+                pane: 'pane_PipaPDAM_2',
+                opacity: 1,
+                color: 'rgba(255,245,155,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PipaPDAM_2');
+        map.getPane('pane_PipaPDAM_2').style.zIndex = 402;
+        map.getPane('pane_PipaPDAM_2').style['mix-blend-mode'] = 'normal';
+        var layer_PipaPDAM_2 = new L.geoJson(json_PipaPDAM_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PipaPDAM_2',
+            layerName: 'layer_PipaPDAM_2',
+            pane: 'pane_PipaPDAM_2',
+            onEachFeature: pop_PipaPDAM_2,
+            style: style_PipaPDAM_2_0,
+        });
+        bounds_group.addLayer(layer_PipaPDAM_2);
+        map.addLayer(layer_PipaPDAM_2);
+        function pop_Survei_Sumur_Resapan_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['objectid'] !== null ? autolinker.link(feature.properties['objectid'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Nama</th>\
+                        <td>' + (feature.properties['nama'] !== null ? autolinker.link(feature.properties['nama'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['alamat'] !== null ? autolinker.link(feature.properties['alamat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['kecamatan'] !== null ? autolinker.link(feature.properties['kecamatan'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['kelurahan'] !== null ? autolinker.link(feature.properties['kelurahan'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['keterangan'] !== null ? autolinker.link(feature.properties['keterangan'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['f0persen'] !== null ? autolinker.link(feature.properties['f0persen'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['f50persen'] !== null ? autolinker.link(feature.properties['f50persen'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['f75persen'] !== null ? autolinker.link(feature.properties['f75persen'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['created_user'] !== null ? autolinker.link(feature.properties['created_user'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['created_date'] !== null ? autolinker.link(feature.properties['created_date'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['last_edited_user'] !== null ? autolinker.link(feature.properties['last_edited_user'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['last_edited_date'] !== null ? autolinker.link(feature.properties['last_edited_date'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">kedalaman</th>\
+                        <td>' + (feature.properties['kedalaman'] !== null ? autolinker.link(feature.properties['kedalaman'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+            var popup = layer.getPopup();
+            var content = popup.getContent();
+            var updatedContent = removeEmptyRowsFromPopupContent(content, feature);
+            popup.setContent(updatedContent);
+        }
+
+        function style_Survei_Sumur_Resapan_3_0() {
+            return {
+                pane: 'pane_Survei_Sumur_Resapan_3',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Survei_Sumur_Resapan_3');
+        map.getPane('pane_Survei_Sumur_Resapan_3').style.zIndex = 403;
+        map.getPane('pane_Survei_Sumur_Resapan_3').style['mix-blend-mode'] = 'normal';
+        var layer_Survei_Sumur_Resapan_3 = new L.geoJson(json_Survei_Sumur_Resapan_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Survei_Sumur_Resapan_3',
+            layerName: 'layer_Survei_Sumur_Resapan_3',
+            pane: 'pane_Survei_Sumur_Resapan_3',
+            onEachFeature: pop_Survei_Sumur_Resapan_3,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Survei_Sumur_Resapan_3_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Survei_Sumur_Resapan_3);
+        map.addLayer(layer_Survei_Sumur_Resapan_3);
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/Survei_Sumur_Resapan_3.png" /> Survei_Sumur_Resapan': layer_Survei_Sumur_Resapan_3,'<img src="legend/PipaPDAM_2.png" /> Pipa PDAM': layer_PipaPDAM_2,'Geologi <br /><table><tr><td style="text-align: center;"><img src="legend/Geologi_1_Aluvium0.png" /></td><td>Aluvium</td></tr><tr><td style="text-align: center;"><img src="legend/Geologi_1_FormasiSerpong1.png" /></td><td>Formasi Serpong</td></tr><tr><td style="text-align: center;"><img src="legend/Geologi_1_KipasAluvium2.png" /></td><td>Kipas Aluvium</td></tr><tr><td style="text-align: center;"><img src="legend/Geologi_1_TuffBanten3.png" /></td><td>Tuff Banten</td></tr></table>': layer_Geologi_1,"OSM Standard": layer_OSMStandard_0,},{collapsed:false}).addTo(map);
+        setBounds();
+        </script>
+    </body>
+</html>
